@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playbook Gamificado: Cultura Relacional - Comfamiliar Huila</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf para generación de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#004A98',
+                            orange: '#FF6B00',
+                            light: '#F3F4F6',
+                            dark: '#1F2937'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        
+        /* Timeline Line - Ajustada para móviles y PC */
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 24px;
+            width: 4px;
+            background: #cbd5e1;
+            z-index: 0;
+            border-radius: 2px;
+        }
+        @media (min-width: 768px) {
+            .timeline-container::before {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        
+        .modal-enter { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-glow {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 107, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0); }
+        }
+        
+        .shake-animation {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Contenedor del PDF invisible para el usuario */
+        #pdf-export-wrapper {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            z-index: -1;
+        }
+
+        #pdf-export-container {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header Responsivo -->
+    <header class="bg-white shadow-md sticky top-0 z-40 border-b-4 border-brand-orange">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo y Título Principal -->
+            <div class="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
+                <div class="bg-gradient-to-br from-brand-blue to-blue-800 text-white p-3 rounded-xl shadow-inner shrink-0">
+                    <i class="fa-solid fa-book-open-reader text-2xl"></i>
+                </div>
+                <div class="text-center md:text-left border-l-2 border-transparent md:border-slate-200 pl-0 md:pl-4">
+                    <h1 class="text-xl md:text-2xl font-black text-brand-blue uppercase tracking-tight">Playbook Relacional</h1>
+                    <p class="text-xs md:text-sm font-semibold text-slate-500">Mercadeo Corporativo • Comfamiliar</p>
+                </div>
+            </div>
+            
+            <!-- Setup del Equipo -->
+            <div class="bg-slate-50 border border-slate-200 p-2 rounded-lg flex items-center gap-3 w-full md:w-auto shadow-sm">
+                <i class="fa-solid fa-users text-brand-orange ml-2"></i>
+                <input type="text" id="team-name" placeholder="Escribe el nombre del Equipo..." class="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder-slate-400 w-full md:w-56 outline-none" onchange="saveTeamName()">
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-6 md:py-8 w-full">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-8 md:mb-10 text-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-shield-halved text-8xl text-brand-blue"></i></div>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 relative z-10">¡Misión: Construir nuestro Playbook! 🚀</h2>
+            <p class="text-sm md:text-base text-slate-600 max-w-3xl mx-auto relative z-10">Cada sesión aporta un capítulo clave. El facilitador les dará una clave de 4 dígitos para abrir cada misión. Al completar el trabajo de su equipo y darle a Guardar, verán su dinámica secreta.</p>
+            
+            <!-- Progress Bar -->
+            <div class="mt-6 max-w-xl mx-auto relative z-10">
+                <div class="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                    <span id="progress-text-label">Capítulos Completados (PDFs)</span>
+                    <span id="progress-text">0/15 Capítulos</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3 border border-slate-200 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-brand-orange to-yellow-400 h-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor del Timeline -->
+        <div id="timeline" class="timeline-container space-y-8 md:space-y-10 relative">
+            <!-- Renderizado JS -->
+        </div>
+
+    </main>
+
+    <!-- Footer Responsivo con Logo y Link -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6 z-10 relative">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 mx-auto md:mx-0">
+                <span class="font-black text-slate-800 text-lg tracking-tight">Daniel Medina - Coaching y Desarrollo Organizacional</span>
+            </div>
+            <div class="text-center md:text-right text-sm text-slate-500 font-medium mt-4 md:mt-0">
+                Desarrollado para Comfamiliar Huila<br>
+                <a href="https://www.danielmcoach.com" target="_blank" class="text-brand-blue hover:text-brand-orange transition-colors font-bold">www.danielmcoach.com</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: Ingreso de PIN (Desbloqueo de Sesión) -->
+    <div id="pin-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col modal-enter relative overflow-hidden text-center">
+            <div class="bg-slate-800 p-6 text-white">
+                <i class="fa-solid fa-lock text-4xl mb-2 text-brand-orange"></i>
+                <h3 class="text-xl font-bold">Sesión Bloqueada</h3>
+            </div>
+            <div class="p-6 bg-slate-50">
+                <p class="text-sm text-slate-600 mb-4 font-medium">Ingresa el PIN de 4 dígitos para acceder a esta misión:</p>
+                <input type="password" id="pin-input" maxlength="4" pattern="\d*" class="w-full text-center text-4xl font-black tracking-[0.5em] p-4 rounded-xl border-2 border-slate-300 shadow-inner focus:border-brand-blue focus:ring-0 outline-none transition-colors bg-white text-slate-800" placeholder="••••">
+                <p id="pin-error" class="text-red-500 text-xs font-bold mt-2 hidden">¡Clave incorrecta! Intenta de nuevo.</p>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex gap-2">
+                <button onclick="closePinModal()" class="flex-1 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancelar</button>
+                <button onclick="verifyPin()" class="flex-1 px-4 py-3 text-sm font-bold text-white bg-brand-orange hover:bg-orange-600 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-key"></i> Desbloquear
+                </button>
+            </div>
+            <input type="hidden" id="pin-modal-session-id">
+        </div>
+    </div>
+
+    <!-- MODAL 2: Interactivo Principal (Zona de Trabajo) -->
+    <div id="modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col modal-enter relative my-auto max-h-[95vh] md:max-h-[90vh]">
+            
+            <div class="bg-gradient-to-r from-brand-blue to-blue-800 p-4 md:p-6 text-white rounded-t-2xl flex justify-between items-start shrink-0">
+                <div>
+                    <span id="modal-eje" class="text-[10px] md:text-xs font-bold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block"></span>
+                    <h3 id="modal-title" class="text-xl md:text-3xl font-black leading-tight"></h3>
+                </div>
+                <button onclick="closeModal()" class="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center transition shrink-0">
+                    <i class="fa-solid fa-xmark text-lg md:text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-4 md:p-8 overflow-y-auto bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-full">
+                <div class="space-y-4 md:space-y-6">
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-l-4 border-l-brand-orange">
+                        <h4 class="text-xs md:text-sm font-black text-slate-800 uppercase flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-bullseye text-brand-orange"></i> 1. Propósito del Capítulo
+                        </h4>
+                        <p id="modal-proposito" class="text-slate-600 text-sm leading-relaxed"></p>
+                    </div>
+                    
+                    <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="text-xs md:text-sm font-black text-slate-800 uppercase flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-people-arrows text-brand-blue"></i> 2. Esquema de Construcción
+                        </h4>
+                        <ul id="modal-pasos" class="space-y-3 text-sm text-slate-600 list-disc list-inside">
+                            <!-- Se llena por JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full min-h-[300px]">
+                    <h4 class="text-xs md:text-sm font-black text-slate-800 uppercase flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-pen-to-square text-green-600"></i> 3. Redacten su Entregable
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-2 font-semibold text-brand-blue" id="modal-entregable-title"></p>
+                    <textarea id="modal-textarea" class="w-full flex-grow rounded-lg border-slate-300 shadow-inner bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 p-3 md:p-4 text-sm md:text-base text-slate-700 resize-none transition-colors border" placeholder="Escriban aquí las reglas, acuerdos y parámetros de este capítulo para su Playbook..."></textarea>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-5 bg-white rounded-b-2xl border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
+                <button onclick="downloadSessionPDF()" id="btn-download-pdf" class="w-full md:w-auto px-5 py-3 md:py-2.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition flex items-center justify-center gap-2 order-2 md:order-1">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar PDF de la Sesión
+                </button>
+
+                <div class="flex gap-2 md:gap-3 w-full md:w-auto order-1 md:order-2">
+                    <button onclick="closeModal()" class="w-1/3 md:w-auto px-4 py-3 md:py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition text-center">Cerrar</button>
+                    <button onclick="saveDeliverable()" id="btn-save-avance" class="w-2/3 md:w-auto px-5 py-3 md:py-2.5 text-sm font-bold text-white bg-brand-blue hover:bg-blue-800 shadow-md hover:shadow-lg rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-lock-open"></i> Guardar y Ver Dinámica
+                    </button>
+                </div>
+            </div>
+            
+            <input type="hidden" id="modal-session-id-main">
+        </div>
+    </div>
+
+    <!-- Plantilla PDF Oculta -->
+    <div id="pdf-export-wrapper">
+        <div id="pdf-export-container" style="padding: 40px; background: white; width: 800px; max-width: 100%;">
+            <div style="border-bottom: 3px solid #004A98; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1 style="color: #004A98; font-size: 24px; margin: 0; text-transform: uppercase;">Playbook de Cultura Relacional</h1>
+                    <p style="color: #666; font-size: 14px; margin: 5px 0 0 0;">Mercadeo Corporativo - Comfamiliar Huila</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #FF6B00; font-weight: bold; margin: 0;">Equipo: <span id="pdf-team-name"></span></p>
+                    <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Fecha: <span id="pdf-date"></span></p>
+                </div>
+            </div>
+            <div style="margin-bottom: 30px;">
+                <span id="pdf-eje" style="background: #eee; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase;"></span>
+                <h2 id="pdf-title" style="color: #333; font-size: 20px; margin: 15px 0 5px 0;"></h2>
+                <h3 style="color: #FF6B00; font-size: 14px; margin: 0 0 20px 0; font-style: italic;" id="pdf-entregable-title"></h3>
+            </div>
+            <div style="background: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                <h4 style="color: #004A98; margin-top: 0; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Desarrollo del Entregable</h4>
+                <div id="pdf-content" style="color: #444; font-size: 14px; line-height: 1.6; white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"></div>
+            </div>
+            <div style="margin-top: 50px; text-align: center; color: #aaa; font-size: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                <strong style="color: #333; font-size: 12px; display: block; margin-bottom: 5px;">Daniel Medina - Coaching y Desarrollo Organizacional</strong>
+                Documento generado a través del Roadmap Interactivo Comfamiliar Huila - Neiva <br>
+                <a href="https://www.danielmcoach.com" target="_blank" style="color: #004A98; text-decoration: none; font-weight: bold; font-size: 11px; margin-top: 4px; display: inline-block;">www.danielmcoach.com</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de Datos con PIN únicos y Dinámicas Variadas
+        const sessionsData = [
+            { 
+                id: 1, pin: "1234", eje: "Conexión y Presencia", icon: "fa-comments", title: "1. Axiomas de la Comunicación", 
+                proposito: "Definir un estilo de comunicación interno tan claro que reduzca al máximo reprocesos con cualquier área.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Teléfono Roto': Un integrante susurra una instrucción compleja al de al lado hasta dar la vuelta. Comparen cómo se distorsiona.",
+                    "🎭 DINÁMICA 'Tabú Corporativo': Un integrante debe lograr que su equipo adivine un proceso de mercadeo sin usar 5 palabras clave prohibidas. Obliga a buscar claridad.",
+                    "🎭 DINÁMICA 'El Mensaje Oculto': Lean un correo de la vida real con tono de sarcasmo y luego con tono alegre. Noten cómo el tono cambia la orden.",
+                    "🎭 DINÁMICA 'El Mimo Corporativo': Un integrante debe actuar un concepto complejo de su área sin hablar. Los demás adivinan. Demuestra el peso del lenguaje no verbal."
+                ],
+                pasos: [
+                    "Analicen e identifiquen 5 comunicaciones confusas recientes, internas o de otras dependencias.", 
+                    "Identifiquen dónde se generó exactamente el 'ruido' en esos casos.", 
+                    "Redacten 3 'Reglas de Oro' universales que el área usará para escribir mensajes libres de ambigüedad."
+                ],
+                entregable: "Capítulo 1: Nuestro Estilo de Comunicación" 
+            },
+            { 
+                id: 2, pin: "2345", eje: "Conexión y Presencia", icon: "fa-brain", title: "2. Empatía Cognitiva", 
+                proposito: "Dejar de asumir que los demás 'ya saben'. Estandarizar cómo pedimos las cosas.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Al Extraterrestre': Explícale a un compañero (que actuará como alguien que jamás ha pisado una empresa) un proceso usando solo palabras sencillas.",
+                    "🎭 DINÁMICA 'Dibujo a Ciegas': Da instrucciones verbales para que un compañero dibuje el logo de una marca sin que sepa qué es. Reflexionen sobre la falta de contexto.",
+                    "🎭 DINÁMICA 'Mímica de Procesos': Intenta explicar un requerimiento usando solo señas. Refuerza la importancia de ser explícitos al hablar.",
+                    "🎭 DINÁMICA 'El Ciego y el Guía': Un integrante con los ojos cerrados debe armar un objeto simple siguiendo solo las instrucciones verbales exactas del equipo."
+                ],
+                pasos: [
+                    "Elijan un requerimiento que ustedes piden frecuentemente y otro que les solicitan mucho a ustedes.", 
+                    "Creen una 'Lista de Chequeo' de 5 puntos obligatorios que toda solicitud debe tener antes de ser enviada o aceptada.", 
+                    "Asegúrense de que esta lista aplique para interactuar con proveedores o compañeros operativos."
+                ],
+                entregable: "Capítulo 2: El Filtro de Claridad (Checklist)" 
+            },
+            { 
+                id: 3, pin: "3456", eje: "Conexión y Presencia", icon: "fa-rotate", title: "3. El Arte del Feedback", 
+                proposito: "Aprender a criticar un proceso o resultado sin atacar a la persona, manteniendo la relación a salvo.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'A la Defensiva': Uno intenta dar feedback constructivo y el otro responde muy a la defensiva. El reto es mantener la calma y re-enfocar la charla.",
+                    "🎭 DINÁMICA 'Feedback al Extremo': Denle retroalimentación dura (pero usando la técnica DESC) a un personaje ficticio o superhéroe por hacer mal su trabajo.",
+                    "🎭 DINÁMICA 'La Hamburguesa Tóxica': Alguien cuenta cómo le dieron el peor feedback de su vida. El equipo identifica qué errores comunicativos hubo ahí.",
+                    "🎭 DINÁMICA 'El Sándwich Inverso': Empiecen dando una crítica absurda en tono amable, luego un halago en tono furioso. Reflexionen sobre el impacto del tono vs el mensaje."
+                ],
+                pasos: [
+                    "Estudien el método DESC (Describir, Expresar, Sugerir, Consecuencias).", 
+                    "Simulen un caso real donde un proveedor o compañero entregó un trabajo que no cumplió la expectativa.", 
+                    "Redacten un guion estándar usando DESC que sirva para dar retroalimentación asertiva."
+                ],
+                entregable: "Capítulo 3: El Estándar de Retroalimentación" 
+            },
+            { 
+                id: 4, pin: "4567", eje: "Conexión y Presencia", icon: "fa-hand", title: "4. El 'No Positivo'", 
+                proposito: "Proteger el tiempo del área aprendiendo a decir 'no' a peticiones urgentes sin generar conflictos.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'El Escudo': Uno hace una petición absurda y urgente. El otro le dice 'no' de tres formas: agresiva, sumisa y asertiva. Analicen las diferencias.",
+                    "🎭 DINÁMICA 'Subasta de Tiempos': Tienen 10 horas y 5 tareas urgentes de diferentes áreas. Negocien a quién le dicen que no y con qué argumentos.",
+                    "🎭 DINÁMICA 'El Cliente Terco': Un compañero no acepta un 'no' por respuesta. El reto es rechazarlo 3 veces usando pura validación emocional.",
+                    "🎭 DINÁMICA 'El Disco Rayado': Uno hace peticiones insistentes. El otro repite exactamente la misma frase de rechazo amable sin alterar el tono de voz."
+                ],
+                pasos: [
+                    "Hagan una lista de las solicitudes de 'para ya' más comunes que reciben de otras áreas o jefaturas.", 
+                    "Diseñen 3 plantillas de respuestas amables y asertivas para rechazar fechas irreales protegiendo la relación."
+                ],
+                entregable: "Capítulo 4: Límites con Respeto (Plantillas)" 
+            },
+            { 
+                id: 5, pin: "5678", eje: "Confianza y Sinergia", icon: "fa-shield-heart", title: "5. Seguridad Psicológica", 
+                proposito: "Consolidar un área donde admitir un error sea el primer paso para solucionarlo, no para esconderlo.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Metida de Pata': En ronda, cada integrante confiesa rápidamente el error más chistoso que ha cometido trabajando. Celebren la sinceridad.",
+                    "🎭 DINÁMICA 'Museo del Fracaso': Escriban en un papel un error pasado y expónganlo como si fuera una obra de arte valiosa. ¿Qué aprendieron de ella?",
+                    "🎭 DINÁMICA 'Premio al Sincero': Inventen un premio ficticio para el que admita más rápido su error en la próxima semana.",
+                    "🎭 DINÁMICA 'Confesionario Anónimo': Escriban en un papel un error reciente sin nombre. Revuélvanlos y lean algunos al azar. El equipo debe aplaudir el aprendizaje."
+                ],
+                pasos: [
+                    "Discutan qué pasa actualmente cuando alguien del área se equivoca frente a un proceso interno.", 
+                    "Redacten 4 acuerdos innegociables de cómo va a reaccionar el equipo frente a un error humano (enfocarse en la solución, no en el culpable)."
+                ],
+                entregable: "Capítulo 5: Zona Segura para Aprender" 
+            },
+            { 
+                id: 6, pin: "6789", eje: "Confianza y Sinergia", icon: "fa-hourglass-half", title: "6. Respeto por el Flujo", 
+                proposito: "Organizar la comunicación para no interrumpir constantemente la concentración de los demás.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Congelados': Un compañero cuenta una historia mientras los demás lo interrumpen con preguntas sin sentido. Reflexionen sobre el enfoque.",
+                    "🎭 DINÁMICA 'Cronómetro Loco': Simulen intentar redactar un correo mientras cada 10 segundos alguien del equipo les toca el hombro.",
+                    "🎭 DINÁMICA 'El Semáforo': Creen señas físicas (como ponerse audífonos o una nota en la pantalla) que signifiquen 'estoy muy concentrado, no interrumpir'.",
+                    "🎭 DINÁMICA 'Estatua Atenta': Mientras uno explica un tema, los demás deben quedarse absolutamente quietos mirándolo. Analicen cómo se siente no ser interrumpido."
+                ],
+                pasos: [
+                    "Definan en equipo una matriz de canales (Ej: Qué debe ir por correo, qué por chat y cuándo es necesario acercarse al puesto).", 
+                    "Redacten un acuerdo general de 'Tiempos de Respuesta Esperados' para no generar falsas urgencias."
+                ],
+                entregable: "Capítulo 6: Código de Interrupciones y Canales" 
+            },
+            { 
+                id: 7, pin: "7890", eje: "Confianza y Sinergia", icon: "fa-network-wired", title: "7. Sinergia y Apoyo Mutuo", 
+                proposito: "Tener claro a quién acudir dentro del área dependiendo del problema a resolver.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Mercado de Poderes': Cada uno tiene 30 segundos para 'vender' su mejor habilidad relacional al equipo (ej. 'soy el mejor calmando quejas').",
+                    "🎭 DINÁMICA 'Escudo de Armas': Dibujen rápido un escudo que represente las 4 fuerzas principales de los miembros de su equipo actual.",
+                    "🎭 DINÁMICA 'La Red': Uno plantea un problema, el siguiente aporta una solución parcial basada en su talento, y el otro la finaliza.",
+                    "🎭 DINÁMICA 'Caza de Talentos': Tienen 1 minuto para encontrar 3 cosas positivas en común que nadie más en el área sabe que comparten."
+                ],
+                pasos: [
+                    "Identifiquen cuáles son las habilidades blandas más fuertes de cada miembro del equipo.", 
+                    "Documenten el 'Mapa de Superpoderes' para saber exactamente a quién pedirle un consejo cuando las cosas se compliquen."
+                ],
+                entregable: "Capítulo 7: Mapa de Superpoderes del Área" 
+            },
+            { 
+                id: 8, pin: "8901", eje: "Confianza y Sinergia", icon: "fa-bolt", title: "8. Comunicación Breve", 
+                proposito: "Aprender a ir al grano para cuidar el tiempo de los líderes, otras áreas y afiliados.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'El Ascensor': Tienen 1 minuto para explicar el proyecto más complejo del área usando solo 3 oraciones. Si se pasan, hay chicharra.",
+                    "🎭 DINÁMICA 'En 5 Palabras': Intenten resumir la esencia del área de Mercadeo de Comfamiliar en exactamente 5 palabras.",
+                    "🎭 DINÁMICA 'El Telegrama': Tomen un correo real muy largo y tachen todas las palabras que no son absolutamente necesarias.",
+                    "🎭 DINÁMICA 'Twitter Verbal': Deben explicar una idea de campaña usando exactamente 14 palabras. Ni una más, ni una menos."
+                ],
+                pasos: [
+                    "Definan una estructura obligatoria de párrafos o viñetas que usarán siempre al presentar un reporte o correo largo.",
+                    "Redacten esta regla de síntesis como un estándar para el área."
+                ],
+                entregable: "Capítulo 8: La Regla del 'Al Grano'" 
+            },
+            { 
+                id: 9, pin: "9012", eje: "Empatía Social", icon: "fa-shoe-prints", title: "9. Superando el Sesgo", 
+                proposito: "Asumir buenas intenciones y dejar de juzgar a las otras áreas cuando hay demoras.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Abogado del Diablo': Elijan una queja sobre otra área. Un integrante debe defenderlos apasionadamente, argumentando su posible estrés.",
+                    "🎭 DINÁMICA 'Cambio de Silla': Siéntense en una silla vacía imaginando que son de Contabilidad o Ventas, y expresen cómo ven a Mercadeo desde allí.",
+                    "🎭 DINÁMICA 'Juicio Rápido': Mencionen la primera palabra que se les viene a la mente sobre 3 dependencias, y analicen si es un prejuicio o una realidad.",
+                    "🎭 DINÁMICA 'El Tribunal': Un 'juez' escucha un problema entre dos áreas. Los 'abogados' deben defender las intenciones positivas de la otra área, no de la propia."
+                ],
+                pasos: [
+                    "Identifiquen un área de Comfamiliar con la que frecuentemente tengan fricción operativa.", 
+                    "Redacten un 'Acuerdo de Lentes de Empatía': tres pasos mentales que el equipo hará antes de molestarse con un compañero de otra área."
+                ],
+                entregable: "Capítulo 9: Lentes de Empatía" 
+            },
+            { 
+                id: 10, pin: "1023", eje: "Empatía Social", icon: "fa-heart", title: "10. Conexión con el Afiliado", 
+                proposito: "Garantizar que todo texto, correo o diseño se sienta cálido, humano y cercano al afiliado.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Traductor de Emociones': Tomen un texto corporativo aburrido. Léanlo con diferentes emociones (tristeza, euforia) para ver cómo cambia.",
+                    "🎭 DINÁMICA 'Carta a Mi Mamá': Reescriban una pauta publicitaria como si se la estuvieran enviando por WhatsApp a sus propias madres.",
+                    "🎭 DINÁMICA 'Cita a Ciegas': Si la marca Comfamiliar Huila fuera una persona en una primera cita, ¿cómo se comportaría para enamorar?",
+                    "🎭 DINÁMICA 'El Doblaje': Pongan un video corto corporativo en silencio. Dos integrantes deben improvisar un doblaje empático y humano de lo que está pasando."
+                ],
+                pasos: [
+                    "Revisen un mensaje o pieza gráfica actual dirigida a los afiliados.", 
+                    "Redacten la 'Voz Humana Comfamiliar': una guía de palabras que deben abundar (ej. 'familia', 'juntos') y las frías que deben evitarse."
+                ],
+                entregable: "Capítulo 10: Voz Humana Comfamiliar" 
+            },
+            { 
+                id: 11, pin: "1134", eje: "Empatía Social", icon: "fa-kit-medical", title: "11. Validación en Crisis", 
+                proposito: "Tener un protocolo claro para calmar a un afiliado o compañero cuando está visiblemente alterado.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Espejo Emocional': Uno finge estar molesto por un servicio. El otro responde SOLO validando la emoción ('Veo que estás frustrado'), sin dar soluciones.",
+                    "🎭 DINÁMICA 'Apaga el Incendio': Lean un comentario furioso de redes sociales y escriban la respuesta más empática posible.",
+                    "🎭 DINÁMICA 'Cliente Llorón': Simulen calmar a alguien exageradamente sentimental sin prometerle devolver dinero o servicios.",
+                    "🎭 DINÁMICA 'El Amortiguador': Alguien lanza frases de frustración (pelotas de papel). El otro debe 'amortiguarlas' respondiendo solo con frases de validación emocional."
+                ],
+                pasos: [
+                    "Creen un protocolo de 3 pasos (Escuchar, Validar, Solucionar) para aplicar en momentos de crisis.", 
+                    "Escriban 5 'Frases Comodín' de empatía que cualquier persona del área puede usar para calmar tensiones."
+                ],
+                entregable: "Capítulo 11: Kit de Desescalación (Frases)" 
+            },
+            { 
+                id: 12, pin: "1245", eje: "Integridad y Resiliencia", icon: "fa-arrow-trend-up", title: "12. Hábitos de Excelencia", 
+                proposito: "Implementar una pequeña mejora actitudinal que se vuelva el sello personal del área.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'El 1% Físico': Intenten estirarse para tocar el techo. Luego, intenten estirarse un 1% más alto. Metáfora de dar siempre un poco más.",
+                    "🎭 DINÁMICA 'Cadena de Hábitos': Creen una regla loca: 'Si suena el teléfono de la oficina, todos debemos sonreír antes de contestar'.",
+                    "🎭 DINÁMICA 'Detector de Quejas': Acuerden qué sonido gracioso harán todos si alguien del equipo se queja en voz alta hoy.",
+                    "🎭 DINÁMICA 'Efecto Dominó': Todos en círculo. Uno hace un movimiento positivo (ej. pulgar arriba), el siguiente lo repite y agrega otro. Si alguien falla, empiezan de nuevo."
+                ],
+                pasos: [
+                    "Elijan un 'Hábito Atómico' relacional que todo el equipo se compromete a cumplir a diario (Ej: No quejarse del clima, agradecer un favor).", 
+                    "Redacten cuál es el hábito y cómo se recordarán mutuamente cumplirlo."
+                ],
+                entregable: "Capítulo 12: Nuestro 1% Diario" 
+            },
+            { 
+                id: 13, pin: "1356", eje: "Integridad y Resiliencia", icon: "fa-scale-balanced", title: "13. Ética y Veracidad", 
+                proposito: "Establecer los límites éticos que cuidarán la reputación de Mercadeo Corporativo.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Polígrafo Humano': Un integrante cuenta tres anécdotas laborales (dos reales, una inventada). El equipo debe adivinar la mentira.",
+                    "🎭 DINÁMICA 'Línea Borrosa': Debatan 2 minutos si poner una foto de archivo (stock) súper irreal en una campaña local es ético o no.",
+                    "🎭 DINÁMICA 'Titulares Engañosos': Jueguen a inventar el titular más amarillista posible para un servicio de Comfamiliar, y luego redáctenlo con ética.",
+                    "🎭 DINÁMICA 'Venta Imposible': Intenten venderle al equipo un objeto inútil (ej. un esfero sin tinta) usando argumentos 100% reales y éticos, sin mentir."
+                ],
+                pasos: [
+                    "Discutan la línea entre hacer un buen mercadeo y hacer promesas que Comfamiliar no puede cumplir.", 
+                    "Redacten los 5 'Mandamientos Éticos' inquebrantables del equipo al interactuar con el público o proveedores."
+                ],
+                entregable: "Capítulo 13: Líneas Inquebrantables" 
+            },
+            { 
+                id: 14, pin: "1467", eje: "Integridad y Resiliencia", icon: "fa-route", title: "14. Responsabilidad Radical", 
+                proposito: "Fomentar un equipo que propone soluciones en vez de quejarse de los problemas.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Cambio de Lente': Alguien cuenta un problema laboral como víctima ('todo sale mal'). Luego, cuenta la misma historia como creador ('tuve este obstáculo y haré esto').",
+                    "🎭 DINÁMICA 'Botón de Pausa': Simulen una discusión donde están a punto de echarle la culpa a otra área, pongan 'pausa', y asuman la responsabilidad propia.",
+                    "🎭 DINÁMICA 'Funeral de Excusas': Escriban en papelitos las excusas clásicas del área ('es que no me mandaron el correo') y rómpanlos.",
+                    "🎭 DINÁMICA 'La Pelota de la Culpa': Pasen un objeto rápidamente diciendo 'es culpa de...'. Cuando alguien diga '¡Mío!', se detiene el juego y asume la responsabilidad de un problema ficticio."
+                ],
+                pasos: [
+                    "Acuerden cómo evitar el chisme y el rol de 'víctima' dentro de las oficinas.", 
+                    "Establezcan una regla de resolución: 'No llevamos un problema a la jefatura sin llevar antes al menos _____ posibles soluciones'."
+                ],
+                entregable: "Capítulo 14: De Víctimas a Creadores" 
+            },
+            { 
+                id: 15, pin: "1578", eje: "Integridad y Resiliencia", icon: "fa-puzzle-piece", title: "15. Ensamble Final", 
+                proposito: "Consolidar todo lo aprendido en un manifiesto que dicte la nueva cultura relacional del área.", 
+                dinamicas: [
+                    "🎭 DINÁMICA 'Grito de Guerra': Inventen un saludo o frase corta y enérgica que identifique la nueva cultura del equipo, y grítenla juntos.",
+                    "🎭 DINÁMICA 'Tatuaje Corporativo': Si el equipo tuviera que tatuarse en el brazo el aprendizaje más grande de estas sesiones, ¿cuál frase sería?",
+                    "🎭 DINÁMICA 'Cápsula del Tiempo': Graben un mensaje de voz en un celular dándole consejos al equipo de Mercadeo del año 2030.",
+                    "🎭 DINÁMICA 'Foto de Familia': Armen una pose grupal que represente 'El Equipo de Mercadeo del Futuro' y tomen una foto o congelen la imagen 10 segundos."
+                ],
+                pasos: [
+                    "Revisen mentalmente los 14 capítulos de su Playbook generados hasta hoy.", 
+                    "Redacten en un gran párrafo inspirador (Manifiesto) cuál es el nuevo ADN, identidad y compromiso del equipo de Mercadeo Corporativo hacia Comfamiliar Huila."
+                ],
+                entregable: "PLAYBOOK FINAL: Manifiesto de Cultura Relacional" 
+            }
+        ];
+
+        // Manejo de Estado
+        let appState = JSON.parse(localStorage.getItem('comfamiliarGameData')) || {
+            teamName: '',
+            deliverables: {},
+            pdfsDownloaded: {},
+            unlockedSessions: {}, 
+            assignedDynamics: {}
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!appState.unlockedSessions) appState.unlockedSessions = {};
+            if (!appState.pdfsDownloaded) appState.pdfsDownloaded = {}; 
+            if (!appState.assignedDynamics) appState.assignedDynamics = {};
+            
+            if(appState.teamName) document.getElementById('team-name').value = appState.teamName;
+            renderTimeline();
+            updateProgress();
+        });
+
+        function saveTeamName() {
+            appState.teamName = document.getElementById('team-name').value;
+            localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+        }
+
+        function renderTimeline() {
+            const timelineEl = document.getElementById('timeline');
+            timelineEl.innerHTML = '';
+            
+            sessionsData.forEach((session, index) => {
+                const deliverableContent = appState.deliverables[session.id];
+                const isCompleted = !!deliverableContent;
+                const isDownloaded = !!appState.pdfsDownloaded[session.id];
+                
+                // La sesión está bloqueada si NO se ha ingresado el PIN
+                const isLocked = !appState.unlockedSessions[session.id]; 
+                let themeColor = 'blue';
+
+                let iconStyles = isDownloaded ? 'bg-green-500 text-white border-green-200' 
+                               : (isLocked ? 'bg-slate-200 text-slate-400 border-slate-100' 
+                               : `bg-brand-${themeColor} text-white border-white pulse-glow shadow-md cursor-pointer`);
+                
+                let cardStyles = isLocked ? 'opacity-60 bg-slate-50 cursor-pointer hover:bg-slate-100 border-l-4 border-slate-300 transition-all' 
+                               : 'opacity-100 bg-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border-l-4';
+                
+                let borderColor = isDownloaded ? 'border-green-500' : (isLocked ? 'border-slate-300' : `border-brand-${themeColor}`);
+
+                const isEven = index % 2 === 0;
+
+                let previewHTML = '';
+                if (isCompleted && deliverableContent) {
+                    previewHTML = `
+                        <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-sm italic relative">
+                            <i class="fa-solid fa-quote-left absolute text-slate-300 top-2 left-2 text-xl opacity-50"></i>
+                            <span class="relative z-10 line-clamp-3 ml-6">${deliverableContent}</span>
+                        </div>
+                    `;
+                }
+
+                const cardHTML = `
+                    <div class="relative flex items-center justify-between md:justify-normal ${isEven ? 'md:flex-row-reverse' : 'md:flex-row'} group">
+                        
+                        <div class="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-4 ${iconStyles} z-10 transition-all"
+                             ${isLocked ? `onclick="openPinModal(${session.id})"` : `onclick="openModal(${session.id})"`}>
+                            ${isDownloaded ? '<i class="fa-solid fa-check"></i>' : (isLocked ? '<i class="fa-solid fa-lock text-sm md:text-base"></i>' : `<i class="fa-solid ${session.icon} text-sm md:text-base"></i>`)}
+                        </div>
+
+                        <div class="w-full md:w-[45%] ml-14 md:ml-0 pl-0 md:px-4" ${isLocked ? `onclick="openPinModal(${session.id})"` : `onclick="openModal(${session.id})"`}>
+                            <div class="p-4 md:p-5 rounded-xl shadow-sm ${cardStyles} ${borderColor}">
+                                <div class="flex justify-between items-start mb-2 flex-wrap gap-2">
+                                    <span class="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-wider">${session.eje}</span>
+                                    ${isDownloaded ? '<span class="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold uppercase"><i class="fa-solid fa-file-pdf mr-1"></i> Capítulo Listo</span>' : (isCompleted ? '<span class="text-[10px] md:text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold uppercase"><i class="fa-solid fa-save mr-1"></i> Guardado</span>' : '')}
+                                </div>
+                                <h3 class="text-base md:text-lg font-bold text-slate-800 mb-2">${session.title}</h3>
+                                <p class="text-xs md:text-sm text-slate-600 line-clamp-2">${session.proposito}</p>
+                                
+                                ${previewHTML}
+
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs md:text-sm font-bold ${isLocked ? 'text-slate-400' : (isDownloaded ? 'text-green-600' : 'text-brand-orange')}">
+                                    ${isLocked ? '<i class="fa-solid fa-key"></i> Requiere PIN del facilitador' : `<i class="fa-solid fa-file-pdf"></i> ${session.entregable}`}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineEl.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function updateProgress() {
+            const downloadedCount = Object.keys(appState.pdfsDownloaded).length;
+            const percentage = (downloadedCount / sessionsData.length) * 100;
+            
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+            document.getElementById('progress-text').innerText = `${downloadedCount}/${sessionsData.length} Capítulos`;
+        }
+
+        // --- LÓGICA DE PIN (CANDADO) ---
+        function openPinModal(id) {
+            document.getElementById('pin-modal-session-id').value = id;
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-error').classList.add('hidden');
+            document.getElementById('pin-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('pin-input').focus(), 100);
+        }
+
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+        }
+
+        function verifyPin() {
+            const id = parseInt(document.getElementById('pin-modal-session-id').value, 10);
+            const enteredPin = document.getElementById('pin-input').value.trim();
+            const session = sessionsData.find(s => s.id === id);
+
+            if (enteredPin === session.pin) {
+                // PIN Correcto
+                appState.unlockedSessions[id] = true;
+                localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+                closePinModal();
+                renderTimeline();
+                openModal(id); 
+            } else {
+                // PIN Incorrecto
+                const errorEl = document.getElementById('pin-error');
+                errorEl.classList.remove('hidden');
+                
+                const inputEl = document.getElementById('pin-input');
+                inputEl.classList.add('shake-animation', 'border-red-500', 'text-red-500');
+                
+                setTimeout(() => {
+                    inputEl.classList.remove('shake-animation', 'border-red-500', 'text-red-500');
+                }, 500);
+            }
+        }
+
+        document.getElementById('pin-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') { verifyPin(); }
+        });
+
+
+        // --- LÓGICA DEL MODAL DE TRABAJO ---
+        function openModal(id) {
+            const session = sessionsData.find(s => s.id === id);
+            if (!session) return;
+
+            document.getElementById('modal-session-id-main').value = session.id;
+            document.getElementById('modal-eje').innerText = session.eje;
+            document.getElementById('modal-title').innerText = session.title;
+            document.getElementById('modal-proposito').innerText = session.proposito;
+            document.getElementById('modal-entregable-title').innerText = `${session.entregable}`;
+            
+            // Asignación Aleatoria Segura
+            if (appState.assignedDynamics[session.id] === undefined) {
+                const randomIndex = Math.floor(Math.random() * session.dinamicas.length);
+                appState.assignedDynamics[session.id] = randomIndex;
+                localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+            }
+            
+            const isSaved = !!appState.deliverables[session.id];
+            const dynamicToUse = session.dinamicas[appState.assignedDynamics[session.id]];
+            const ulPasos = document.getElementById('modal-pasos');
+            
+            let dynamicHTML = '';
+            if (isSaved) {
+                dynamicHTML = `<li id="dynamic-li" class="bg-orange-50 p-4 rounded-lg border border-brand-orange mb-4 shadow-sm">
+                                  <strong class="text-brand-orange text-xs md:text-sm block uppercase tracking-wide mb-1"><i class="fa-solid fa-unlock-keyhole"></i> ¡Dinámica de tu Equipo!</strong>
+                                  <span class="text-slate-700 text-sm leading-relaxed">${dynamicToUse}</span>
+                               </li>`;
+            } else {
+                dynamicHTML = `<li id="dynamic-li" class="bg-slate-100 p-4 rounded-lg border border-slate-200 mb-4 text-center shadow-inner">
+                                  <strong class="text-slate-400 text-xs md:text-sm block"><i class="fa-solid fa-lock mb-2 text-2xl"></i><br>Guarden su avance en el entregable para desbloquear la dinámica secreta.</strong>
+                               </li>`;
+            }
+            
+            ulPasos.innerHTML = dynamicHTML;
+            
+            session.pasos.forEach(paso => {
+                const li = document.createElement('li');
+                li.innerText = paso;
+                ulPasos.appendChild(li);
+            });
+            
+            const textarea = document.getElementById('modal-textarea');
+            textarea.value = appState.deliverables[session.id] || '';
+
+            updateUIState();
+            textarea.addEventListener('input', updateUIState);
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function updateUIState() {
+            const text = document.getElementById('modal-textarea').value.trim();
+            const btnPdf = document.getElementById('btn-download-pdf');
+            const btnSave = document.getElementById('btn-save-avance');
+            const id = parseInt(document.getElementById('modal-session-id-main').value, 10);
+            const isSaved = !!appState.deliverables[id];
+            
+            if(text.length > 0) {
+                btnPdf.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnPdf.disabled = false;
+            } else {
+                btnPdf.classList.add('opacity-50', 'cursor-not-allowed');
+                btnPdf.disabled = true;
+            }
+            
+            if(isSaved) {
+                btnSave.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Actualizar Avance';
+                btnSave.classList.remove('bg-brand-orange');
+                btnSave.classList.add('bg-brand-blue');
+            } else {
+                btnSave.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> Guardar y Ver Dinámica';
+                btnSave.classList.remove('bg-brand-blue');
+                btnSave.classList.add('bg-brand-orange');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal-textarea').removeEventListener('input', updateUIState);
+        }
+
+        function saveDeliverable() {
+            const id = parseInt(document.getElementById('modal-session-id-main').value, 10);
+            const content = document.getElementById('modal-textarea').value.trim();
+            let teamName = document.getElementById('team-name').value.trim();
+
+            // PROTECCIÓN CONTRA PERDIDA DE DATOS
+            if (!teamName) {
+                const newTeam = prompt("⚠️ ¡Atención! Por favor, ingresa el nombre de tu equipo para poder guardar tu avance:");
+                if (newTeam && newTeam.trim() !== '') {
+                    teamName = newTeam.trim();
+                    document.getElementById('team-name').value = teamName;
+                    appState.teamName = teamName;
+                    localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+                } else {
+                    return; // Retorna SIN cerrar el modal para no perder el texto
+                }
+            }
+
+            if (!content) {
+                alert("Deben escribir sus acuerdos en el área de trabajo para poder avanzar.");
+                return; // Retorna SIN cerrar
+            }
+
+            const wasSaved = !!appState.deliverables[id];
+            appState.deliverables[id] = content;
+            localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+
+            renderTimeline(); 
+            updateUIState(); 
+
+            // Efecto Sorpresa: Revelar la Dinámica
+            if (!wasSaved) {
+                const session = sessionsData.find(s => s.id === id);
+                const dynamicToUse = session.dinamicas[appState.assignedDynamics[id]];
+                
+                const dynamicLi = document.getElementById('dynamic-li');
+                dynamicLi.className = "bg-orange-50 p-4 rounded-lg border-2 border-brand-orange mb-4 shadow-md shake-animation";
+                dynamicLi.innerHTML = `<strong class="text-brand-orange text-xs md:text-sm block uppercase tracking-wide mb-1"><i class="fa-solid fa-unlock-keyhole"></i> ¡Caja Fuerte Abierta - Dinámica del Equipo!</strong><span class="text-slate-800 text-sm font-bold">${dynamicToUse}</span>`;
+                
+                dynamicLi.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                alert("Acuerdos actualizados correctamente. Pueden proceder a descargar el PDF.");
+            }
+        }
+
+        function downloadSessionPDF() {
+            const id = parseInt(document.getElementById('modal-session-id-main').value, 10);
+            const session = sessionsData.find(s => s.id === id);
+            const content = document.getElementById('modal-textarea').value.trim();
+            let teamName = document.getElementById('team-name').value.trim();
+
+            if (!teamName) {
+                const newTeam = prompt("⚠️ Ingresa el nombre del equipo para poder generar el PDF:");
+                if (newTeam && newTeam.trim() !== '') {
+                    teamName = newTeam.trim();
+                    document.getElementById('team-name').value = teamName;
+                    appState.teamName = teamName;
+                    localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+                } else {
+                    return;
+                }
+            }
+
+            if (!content) return;
+
+            document.getElementById('pdf-team-name').innerText = teamName;
+            document.getElementById('pdf-date').innerText = new Date().toLocaleDateString('es-CO');
+            document.getElementById('pdf-eje').innerText = session.eje;
+            document.getElementById('pdf-title').innerText = session.title;
+            document.getElementById('pdf-entregable-title').innerText = session.entregable;
+            document.getElementById('pdf-content').innerText = content; 
+
+            const element = document.getElementById('pdf-export-container');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5], 
+                filename:     `Equipo_${teamName.replace(/\s+/g, '_')}_${session.entregable.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowY: 0 }, 
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+                enableLinks:  true
+            };
+
+            const btn = document.getElementById('btn-download-pdf');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando Capítulo...';
+            btn.disabled = true;
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                appState.pdfsDownloaded[id] = true;
+                appState.deliverables[id] = content;
+                localStorage.setItem('comfamiliarGameData', JSON.stringify(appState));
+                
+                renderTimeline();
+                updateProgress();
+
+                setTimeout(() => {
+                    alert(`¡Excelente trabajo Equipo ${teamName}!\nHan guardado el ${session.entregable} y el PDF está listo.`);
+                    closeModal();
+                }, 800);
+            });
+        }
+    </script>
+</body>
+</html>
